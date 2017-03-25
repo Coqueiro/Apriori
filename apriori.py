@@ -1,3 +1,4 @@
+#!/usr/bin/python3 
 """
 Description     : Simple Python implementation of the Apriori Algorithm
 
@@ -8,6 +9,7 @@ Usage:
 """
 
 import sys
+import csv
 
 from itertools import chain, combinations
 from collections import defaultdict
@@ -20,29 +22,30 @@ def subsets(arr):
 
 
 def returnItemsWithMinSupport(itemSet, transactionList, minSupport, freqSet):
-        """calculates the support for items in the itemSet and returns a subset
-       of the itemSet each of whose elements satisfies the minimum support"""
-        _itemSet = set()
-        localSet = defaultdict(int)
+    """calculates the support for items in the itemSet and returns a subset
+    of the itemSet each of whose elements satisfies the minimum support"""
+    _itemSet = set()
+    localSet = defaultdict(int)
 
-        for item in itemSet:
-                for transaction in transactionList:
-                        if item.issubset(transaction):
-                                freqSet[item] += 1
-                                localSet[item] += 1
+    for item in itemSet:
+        for transaction in transactionList:
+            if item.issubset(transaction):
+                freqSet[item] += 1
+                localSet[item] += 1
 
-        for item, count in localSet.items():
-                support = float(count)/len(transactionList)
+    for item, count in localSet.items():
+        support = float(count)/len(transactionList)
 
-                if support >= minSupport:
-                        _itemSet.add(item)
+        if support >= minSupport:
+            _itemSet.add(item)
 
-        return _itemSet
+    return _itemSet
 
 
 def joinSet(itemSet, length):
-        """Join a set with itself and returns the n-element itemsets"""
-        return set([i.union(j) for i in itemSet for j in itemSet if len(i.union(j)) == length])
+    """Join a set with itself and returns the n-element itemsets"""
+    return set([i.union(j) for i in itemSet for j in itemSet 
+                if len(i.union(j)) == length])
 
 
 def getItemSetTransactionList(data_iterator):
@@ -100,7 +103,8 @@ def runApriori(data_iter, minSupport, minConfidence):
                            for item in value])
 
     toRetRules = []
-    for key, value in largeSet.items()[1:]:
+
+    for key, value in largeSet.items():
         for item in value:
             _subsets = map(frozenset, [x for x in subsets(item)])
             for element in _subsets:
@@ -114,22 +118,27 @@ def runApriori(data_iter, minSupport, minConfidence):
 
 
 def printResults(items, rules):
-    """prints the generated itemsets sorted by support and the confidence rules sorted by confidence"""
-    for item, support in sorted(items, key=lambda (item, support): support):
-        print "item: %s , %.3f" % (str(item), support)
-    print "\n------------------------ RULES:"
-    for rule, confidence in sorted(rules, key=lambda (rule, confidence): confidence):
+    """
+    prints the generated itemsets sorted by support and 
+    the confidence rules sorted by confidence
+    """
+
+    for item, support in sorted(items, key=lambda item: item[1]):
+        print("item: %s , %.3f" % (str(item), support))
+
+    print('\n ------------------------ RULES:')
+    for rule, confidence in sorted(rules, key=lambda rule: rule[1]):
         pre, post = rule
-        print "Rule: %s ==> %s , %.3f" % (str(pre), str(post), confidence)
+        print("Rule: %s ==> %s , %.3f" % (str(pre), str(post), confidence))
 
 
-def dataFromFile(fname):
-        """Function which reads from the file and yields a generator"""
-        file_iter = open(fname, 'rU')
-        for line in file_iter:
-                line = line.strip().rstrip(',')                         # Remove trailing comma
-                record = frozenset(line.split(','))
-                yield record
+def dataFromFile(fname, **kwargs):
+    """Function which reads from the file and yields a generator"""
+
+    with open(fname, 'r') as file_iter:
+        reader = csv.reader(file_iter, delimiter=',')
+        for line in reader:
+            yield set(line)
 
 
 if __name__ == "__main__":
@@ -154,12 +163,12 @@ if __name__ == "__main__":
 
     inFile = None
     if options.input is None:
-            inFile = sys.stdin
+        inFile = sys.stdin
     elif options.input is not None:
-            inFile = dataFromFile(options.input)
+        inFile = dataFromFile(options.input)
     else:
-            print 'No dataset filename specified, system with exit\n'
-            sys.exit('System will exit')
+        print('No dataset filename specified, system with exit')
+        sys.exit('System will exit')
 
     minSupport = options.minS
     minConfidence = options.minC
@@ -167,3 +176,4 @@ if __name__ == "__main__":
     items, rules = runApriori(inFile, minSupport, minConfidence)
 
     printResults(items, rules)
+
