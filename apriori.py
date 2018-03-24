@@ -58,13 +58,12 @@ def getItemSetTransactionList(data_iterator):
             itemSet.add(frozenset([item]))              # Generate 1-itemSets
     return itemSet, transactionList
 
-
-def runApriori(data_iter, minSupport, minConfidence):
+def runApriori(data_iter, minSupport, minConfidence = 0.6, minLift = 1, minConviction = 1):
     """
     run the apriori algorithm. data_iter is a record iterator
     Return both:
      - items (tuple, support)
-     - rules ((pretuple, posttuple), confidence)
+     - rules ((pretuple, posttuple), confidence, lift, conviction)
     """
     itemSet, transactionList = getItemSetTransactionList(data_iter)
 
@@ -111,25 +110,34 @@ def runApriori(data_iter, minSupport, minConfidence):
                 remain = item.difference(element)
                 if len(remain) > 0:
                     confidence = getSupport(item)/getSupport(element)
-                    if confidence >= minConfidence:
+                    lift = getSupport(item)/(getSupport(element)*getSupport(remain))
+                    conviction = (1-getSupport(remain))/(1-confidence)
+                    if confidence >= minConfidence and lift >= minLift and conviction >= minConviction:
                         toRetRules.append(((tuple(element), tuple(remain)),
-                                           confidence))
+                                           confidence, lift, conviction))
     return toRetItems, toRetRules
 
 
-def printResults(items, rules):
+def printResults(items, rules, order):
     """
     prints the generated itemsets sorted by support and 
     the confidence rules sorted by confidence
+    orders by confidence, lift or convinction
     """
 
     for item, support in sorted(items, key=lambda item: item[1]):
-        print("item: %s , %.3f" % (str(item), support))
-
+        print("item: %s \t %.3f" % (str(item), support))
+    
+    rule_key = 1
+    if order == 'confidence': rule_key = 1
+    elif order == 'lift': rule_key = 2
+    elif order == 'conviction': rule_key = 3
+        
     print('\n ------------------------ RULES:')
-    for rule, confidence in sorted(rules, key=lambda rule: rule[1]):
+    print('\n ------- PRE \t POST \t CONFIDENCE \t LIFT \t CONVICTION -------\n')
+    for rule, confidence, lift, conviction in sorted(rules, key=lambda rule: rule[rule_key]):
         pre, post = rule
-        print("Rule: %s ==> %s , %.3f" % (str(pre), str(post), confidence))
+        print("Rule: %s ==> \t %s \t %.3f \t %.3f \t %.3f" % (str(pre), str(post), confidence, lift, conviction))
 
 
 def dataFromFile(fname, **kwargs):
@@ -158,6 +166,20 @@ if __name__ == "__main__":
                          help='minimum confidence value',
                          default=0.6,
                          type='float')
+    optparser.add_option('-c', '--minLift',
+                         dest='minL',
+                         help='minimum lift value',
+                         default=1,
+                         type='float')
+    optparser.add_option('-c', '--minConviction',
+                         dest='minCV',
+                         help='minimum conviction value',
+                         default=1,
+                         type='float')
+    optparser.add_option('-o', '--order',
+                         dest='order',
+                         help='order rule results by measure of interestingness',
+                         default='confidence')
 
     (options, args) = optparser.parse_args()
 
@@ -172,8 +194,11 @@ if __name__ == "__main__":
 
     minSupport = options.minS
     minConfidence = options.minC
+    minLift = options.minL
+    minConviction = options.minCV
+    order = options.order
 
-    items, rules = runApriori(inFile, minSupport, minConfidence)
+    items, rules = runApriori(inFile, minSupport, minConfidence, minLift, minConviction)
 
-    printResults(items, rules)
+    printResults(items, rules, order)
 
