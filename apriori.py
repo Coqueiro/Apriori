@@ -166,12 +166,12 @@ if __name__ == "__main__":
                          help='minimum confidence value',
                          default=0.6,
                          type='float')
-    optparser.add_option('-c', '--minLift',
+    optparser.add_option('-l', '--minLift',
                          dest='minL',
                          help='minimum lift value',
                          default=1,
                          type='float')
-    optparser.add_option('-c', '--minConviction',
+    optparser.add_option('-cv', '--minConviction',
                          dest='minCV',
                          help='minimum conviction value',
                          default=1,
