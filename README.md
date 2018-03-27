@@ -1,8 +1,6 @@
 Python Implementation of Apriori Algorithm 
 ==========================================
 
-[![Build Status](https://travis-ci.org/asaini/Apriori.svg?branch=master)](https://travis-ci.org/asaini/Apriori)
-
 The code attempts to implement the following paper:
 
 > *Agrawal, Rakesh, and Ramakrishnan Srikant. "Fast algorithms for mining association rules." Proc. 20th int. conf. very large data bases, VLDB. Vol. 1215. 1994.*
@@ -28,15 +26,21 @@ To run program with dataset
 
     python apriori.py -f INTEGRATED-DATASET.csv -s 0.17 -c 0.68 -l 1.5 -cv 1.2 -o lift
 
+To run program inside code
+
+    import apriori
+    items, rules = apriori.runApriori(data_iter, minSupport, minConfidence = 0.6, minLift = 1, minConviction = 1)
+    apriori.printResults(items, rules, order = 'confidence')
+    
 Best results are obtained for the following values:  
 
 Support     : Between 0.1 and 0.2  
 
 Confidence  : Between 0.5 and 0.7
 
-Lift     : More than 1.0
+Lift     : More than 1.0 for positive correlation.
 
-Conviction  : More than 1.0
+Conviction  : More than 1.0 for positive correlation.
 
 License
 -------
